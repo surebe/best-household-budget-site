@@ -64,7 +64,7 @@ export function render(el) {
 
   <section class="card" aria-labelledby="plan-title">
     <h2 id="plan-title">How contributing works here</h2>
-    <p>“Add $50” is a planned contribution: it records the money you intend to move to that goal this month. It does not take money out of any spending category — the budget page still shows the full month. When the month ends, the household moves the planned amounts to their real accounts, and the saved totals carry over.</p>
+    <p>“Add $50” is a planned contribution: it records the money you intend to move to that goal this month. It does not take money out of any spending category — the budget page still shows the full month. When the month ends, the household moves the planned amounts to their real accounts, and the saved totals carry over. The months-to-go figure on each card fills the goals in the order they are listed, at this month’s leftover pace, so a goal further down the list waits for the ones above it.</p>
   </section>`;
 
   el.querySelectorAll('[data-contribute]').forEach((btn) => {

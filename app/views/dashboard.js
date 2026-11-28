@@ -41,7 +41,7 @@ export function render(el, go) {
       <h2 id="donut-title">Where the money went</h2>
       ${donut(cats, t.spent)}
       <ul class="legend">
-        ${cats.map((c) => `<li><span class="swatch" style="background:${c.color}"></span>${c.label}<b>${money(c.spent)}</b></li>`).join('')}
+        ${cats.map((c) => `<li><span class="swatch" style="background:${c.color}"></span>${c.label}<span class="legend-share">${Math.round((c.spent / Math.max(1, t.spent)) * 100)}%</span><b>${money(c.spent)}</b></li>`).join('')}
       </ul>
       <details class="data-table"><summary>Spending by category as a table</summary>
         <table><thead><tr><th scope="col">Category</th><th scope="col">Spent</th><th scope="col">Share</th></tr></thead>

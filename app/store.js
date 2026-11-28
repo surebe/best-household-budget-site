@@ -106,14 +106,21 @@ export function addGoal(name, target) {
   return goal;
 }
 
-// Months until a goal is fully funded if the household keeps saving at the
-// current month's leftover pace. Returns null when nothing is being saved.
+// Months until a goal is fully funded at the current month's leftover pace.
+// The leftover fills the goals in the order they are listed, so a later
+// goal's date also counts the queue ahead of it. Returns null when nothing
+// is being saved.
 export function monthsToGoal(goal) {
   const { left } = totals();
   if (left <= 0) return null;
   const remaining = goal.target - goal.saved;
   if (remaining <= 0) return 0;
-  return Math.ceil(remaining / left);
+  let ahead = 0;
+  for (const g of store.goals) {
+    if (g.id === goal.id) break;
+    ahead += Math.max(0, g.target - g.saved);
+  }
+  return Math.ceil((ahead + remaining) / left);
 }
 
 // Six months of income vs spending: the four HISTORY aggregates plus October
