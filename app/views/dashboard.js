@@ -1,10 +1,13 @@
-// Dashboard: month switcher, four summary tiles, spending donut, budget health
-// (the three categories nearest their limit), recent transactions, and the
-// six-month income-vs-spending chart.
+// Dashboard: a dark hearth hero built around the one figure the household
+// checks first — what is left to spend — with the month's other totals as a
+// stat strip inside it; then the spending donut, budget health (the three
+// categories nearest their limit), recent transactions, and the six-month
+// income-vs-spending chart.
 
 import { CATEGORY_MAP, money, money0, monthLabel } from '../data.js';
 import { byCategory, monthTxns, sixMonthSeries, store, tightestCategories, totals } from '../store.js';
 import { donut, incomeVsSpent } from '../charts.js';
+import { chipStyle, icon } from '../icons.js';
 
 export function render(el, go) {
   const t = totals();
@@ -13,35 +16,44 @@ export function render(el, go) {
   const recent = monthTxns().slice(0, 6);
   const series = sixMonthSeries();
   const rate = Math.round(t.savingsRate * 100);
+  const spentShare = t.income > 0 ? Math.min(100, Math.round((t.spent / t.income) * 100)) : 0;
   const insight =
     t.left >= 0
       ? `You are ${money(t.left)} ahead this month — at this pace the emergency fund is about a month from full.`
       : `You are ${money(-t.left)} over income this month — check the budget page for the tightest categories.`;
 
   el.innerHTML = `
-  <section class="page-head" aria-labelledby="page-title">
-    <div>
-      <h1 id="page-title">Your household at a glance</h1>
-      <p class="lede">Income, spending and savings for the whole household — one page, no surprises.</p>
+  <section class="hero" aria-labelledby="page-title">
+    <div class="hero-head">
+      <div>
+        <h1 id="page-title">Your household at a glance</h1>
+        <p class="lede">Income, spending and savings for the whole household — one page, no surprises.</p>
+      </div>
+      ${monthSwitcher()}
     </div>
-    ${monthSwitcher()}
+    <div class="hero-body">
+      <div class="hero-figure">
+        <p class="hero-eyebrow">${icon('flame')} Left to spend · ${monthLabel(store.month)}</p>
+        <p class="hero-amount ${t.left < 0 ? 'negative' : ''}">${money(t.left)}</p>
+        <div class="hero-meter" role="img" aria-label="Spent ${money(t.spent)} of ${money(t.income)} income, ${spentShare} percent"><span style="width:${spentShare}%"></span></div>
+        <p class="hero-caption">Spent <b>${money(t.spent)}</b> of <b>${money(t.income)}</b> income · ${money0(t.spent / daysSoFar())} a day so far</p>
+      </div>
+      <p class="hero-insight">${insight}</p>
+    </div>
+    <dl class="hero-stats" aria-label="Monthly totals">
+      <div class="hstat"><dt>Income</dt><dd>${money(t.income)}</dd><dd class="hstat-sub">${t.count} transactions in ${monthLabel(store.month)}</dd></div>
+      <div class="hstat"><dt>Spent</dt><dd>${money(t.spent)}</dd><dd class="hstat-sub">across ${cats.length} categories</dd></div>
+      <div class="hstat"><dt>Savings rate</dt><dd>${rate}%</dd><dd class="hstat-sub">${rate >= 20 ? 'above the 20% rule of thumb' : 'below the 20% rule of thumb'}</dd></div>
+      <div class="hstat"><dt>Tightest category</dt><dd>${tight[0] ? Math.round(tight[0].pct * 100) + '%' : '—'}</dd><dd class="hstat-sub">${tight[0] ? `${tight[0].label} is nearest its limit` : 'nothing spent yet'}</dd></div>
+    </dl>
   </section>
-
-  <section class="tiles" aria-live="polite" aria-label="Monthly totals">
-    <article class="tile"><h2>Income</h2><p class="tile-value">${money(t.income)}</p><p class="tile-sub">${t.count} transactions in ${monthLabel(store.month)}</p></article>
-    <article class="tile"><h2>Spent</h2><p class="tile-value">${money(t.spent)}</p><p class="tile-sub">${money0(t.spent / daysSoFar())} a day so far</p></article>
-    <article class="tile"><h2>Left to spend</h2><p class="tile-value ${t.left < 0 ? 'negative' : 'positive'}">${money(t.left)}</p><p class="tile-sub">${t.left >= 0 ? 'still in the month’s pocket' : 'over income — see budget'}</p></article>
-    <article class="tile"><h2>Savings rate</h2><p class="tile-value">${rate}%</p><p class="tile-sub">${rate >= 20 ? 'comfortably above the 20% rule of thumb' : 'below the 20% rule of thumb'}</p></article>
-  </section>
-
-  <p class="insight">${insight}</p>
 
   <div class="dash-grid">
     <section class="card" aria-labelledby="donut-title">
       <h2 id="donut-title">Where the money went</h2>
       ${donut(cats, t.spent)}
       <ul class="legend">
-        ${cats.map((c) => `<li><span class="swatch" style="background:${c.color}"></span>${c.label}<span class="legend-share">${Math.round((c.spent / Math.max(1, t.spent)) * 100)}%</span><b>${money(c.spent)}</b></li>`).join('')}
+        ${cats.map((c) => `<li><span class="cat-chip" style="${chipStyle(c.color)}">${icon(c.id)}</span>${c.label}<span class="legend-share">${Math.round((c.spent / Math.max(1, t.spent)) * 100)}%</span><b>${money(c.spent)}</b></li>`).join('')}
       </ul>
       <details class="data-table"><summary>Spending by category as a table</summary>
         <table><thead><tr><th scope="col">Category</th><th scope="col">Spent</th><th scope="col">Share</th></tr></thead>
@@ -53,7 +65,7 @@ export function render(el, go) {
       <section class="card" aria-labelledby="health-title">
         <h2 id="health-title">Budget health — nearest the limit</h2>
         <ul class="health-list">
-          ${tight.map((c) => `<li><span class="health-name">${c.label}</span><span class="health-bar"><span style="width:${Math.min(100, Math.round(c.pct * 100))}%" class="${barClass(c.pct)}"></span></span><b>${Math.round(c.pct * 100)}%</b><span class="health-left">${money(Math.max(0, c.limit - c.spent))} left</span></li>`).join('')}
+          ${tight.map((c) => `<li><span class="health-name"><span class="cat-chip" style="${chipStyle(c.color)}">${icon(c.id)}</span>${c.label}</span><span class="health-bar"><span style="width:${Math.min(100, Math.round(c.pct * 100))}%" class="${barClass(c.pct)}"></span></span><b>${Math.round(c.pct * 100)}%</b><span class="health-left">${money(Math.max(0, c.limit - c.spent))} left</span></li>`).join('')}
         </ul>
         <p class="card-link"><a href="#/budget">See the full budget →</a></p>
       </section>
@@ -115,5 +127,5 @@ export function txnRow(txn) {
     timeZone: 'UTC',
   });
   const sign = txn.kind === 'in' ? '+' : '−';
-  return `<li><span class="txn-day">${day}</span><span class="txn-note">${txn.note}</span><span class="txn-cat">${cat ? cat.label : ''}</span><b class="txn-amount ${txn.kind}">${sign}${money(txn.amount)}</b></li>`;
+  return `<li><span class="txn-day">${day}</span><span class="cat-chip" style="${chipStyle(cat ? cat.color : '#8c8c8c')}">${icon(txn.category)}</span><span class="txn-note">${txn.note}</span><span class="txn-cat">${cat ? cat.label : ''}</span><b class="txn-amount ${txn.kind}">${sign}${money(txn.amount)}</b></li>`;
 }

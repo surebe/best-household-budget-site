@@ -5,6 +5,7 @@
 import { money, monthLabel } from '../data.js';
 import { byCategory, store, tightestCategories, totals } from '../store.js';
 import { barClass, monthSwitcher } from './dashboard.js';
+import { chipStyle, icon } from '../icons.js';
 
 export function render(el, go) {
   const cats = byCategory();
@@ -28,9 +29,19 @@ export function render(el, go) {
     ${monthSwitcher()}
   </section>
 
-  <section class="card" aria-labelledby="summary-title">
+  <section class="card budget-band" aria-labelledby="summary-title">
     <h2 id="summary-title" class="visually-hidden">Budget summary</h2>
-    <p class="budget-summary"><b>${money(totalSpent)}</b> of <b>${money(totalLimit)}</b> budgeted spent — <b>${money(totalLimit - totalSpent)}</b> still unspent across all categories. Income this month: <b>${money(t.income)}</b>.</p>
+    <div class="band-main">
+      <div>
+        <p class="band-eyebrow">Spent of the month’s budget</p>
+        <p class="band-figure">${money(totalSpent)} <span>of ${money(totalLimit)}</span></p>
+        <p class="band-sub"><b>${money(totalLimit - totalSpent)}</b> still unspent across all categories · income this month <b>${money(t.income)}</b></p>
+      </div>
+      <div class="band-meter">
+        <div class="budget-bar band-bar" role="img" aria-label="Total: ${money(totalSpent)} spent of a ${money(totalLimit)} budget, ${Math.round((totalSpent / Math.max(1, totalLimit)) * 100)} percent"><span style="width:${Math.min(100, Math.round((totalSpent / Math.max(1, totalLimit)) * 100))}%" class="${barClass(totalSpent / Math.max(1, totalLimit))}"></span></div>
+        <p class="band-meter-label">${Math.round((totalSpent / Math.max(1, totalLimit)) * 100)}% of the budget used</p>
+      </div>
+    </div>
     <p class="insight">${advice}</p>
   </section>
 
@@ -42,7 +53,7 @@ export function render(el, go) {
         const remaining = c.limit - c.spent;
         const status = c.pct > 1 ? `over by ${money(-remaining)}` : `${money(remaining)} left`;
         return `<li>
-          <div class="budget-row-head"><span class="budget-name"><span class="swatch" style="background:${c.color}"></span>${c.label}</span><span class="budget-numbers"><b>${money(c.spent)}</b> of ${money(c.limit)}</span></div>
+          <div class="budget-row-head"><span class="budget-name"><span class="cat-chip" style="${chipStyle(c.color)}">${icon(c.id)}</span>${c.label}</span><span class="budget-numbers"><b>${money(c.spent)}</b> of ${money(c.limit)}</span></div>
           <div class="budget-bar" role="img" aria-label="${c.label}: ${money(c.spent)} spent of a ${money(c.limit)} limit, ${pct} percent"><span style="width:${Math.min(100, pct)}%" class="${barClass(c.pct)}"></span></div>
           <div class="budget-row-foot"><span>${pct}% used</span><span class="${c.pct > 1 ? 'over' : ''}">${status}</span></div>
         </li>`;

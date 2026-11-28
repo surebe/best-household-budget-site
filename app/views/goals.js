@@ -4,6 +4,16 @@
 
 import { money, monthLabel } from '../data.js';
 import { addGoal, contribute, goalProgress, monthsToGoal, store, totals } from '../store.js';
+import { icon } from '../icons.js';
+
+// Each goal wears its own medallion: a glyph in a tinted disc, so the cards
+// read as three different ambitions, not three copies of one widget.
+const GOAL_MARKS = {
+  g1: { glyph: 'shield', hue: '#4d7c59' },
+  g2: { glyph: 'plane', hue: '#a66a1c' },
+  g3: { glyph: 'laptop', hue: '#4a6d94' },
+};
+const goalMark = (id) => GOAL_MARKS[id] ?? { glyph: 'target', hue: '#7d5f8d' };
 
 export function render(el) {
   const goals = goalProgress();
@@ -31,9 +41,14 @@ export function render(el) {
             : months <= 1
               ? 'About 1 month to go at this month’s savings pace.'
               : `About ${months} months to go at this month’s savings pace.`;
-      return `<article class="card goal-card" aria-labelledby="goal-${g.id}">
-        <h2 id="goal-${g.id}">${g.name}</h2>
-        <p class="goal-numbers"><b>${money(g.saved)}</b> of ${money(g.target)} <span>(${Math.round(g.pct * 100)}%)</span></p>
+      const mark = goalMark(g.id);
+      return `<article class="card goal-card" style="--goal-hue:${mark.hue}" aria-labelledby="goal-${g.id}">
+        <div class="goal-head">
+          <span class="goal-medal" aria-hidden="true">${icon(mark.glyph)}</span>
+          <h2 id="goal-${g.id}">${g.name}</h2>
+          <span class="goal-pct">${Math.round(g.pct * 100)}%</span>
+        </div>
+        <p class="goal-numbers"><b>${money(g.saved)}</b> of ${money(g.target)}</p>
         <div class="budget-bar goal-bar" role="img" aria-label="${g.name}: ${money(g.saved)} saved of ${money(g.target)}, ${Math.round(g.pct * 100)} percent"><span style="width:${Math.min(100, Math.round(g.pct * 100))}%" class="bar-ok"></span></div>
         <p class="goal-eta">${eta}</p>
         <p class="goal-actions">
@@ -44,8 +59,11 @@ export function render(el) {
       </article>`;
     }).join('')}
 
-    <section class="card goal-card new-goal" aria-labelledby="new-goal-title">
-      <h2 id="new-goal-title">Start a new goal</h2>
+    <section class="card goal-card new-goal" style="--goal-hue:#c96f4a" aria-labelledby="new-goal-title">
+      <div class="goal-head">
+        <span class="goal-medal" aria-hidden="true">${icon('target')}</span>
+        <h2 id="new-goal-title">Start a new goal</h2>
+      </div>
       <form id="goal-form" novalidate>
         <p class="field">
           <label for="g-name">Goal name</label>

@@ -6,6 +6,7 @@
 import { CATEGORIES, CATEGORY_MAP, money, monthLabel } from '../data.js';
 import { addTransaction, deleteTransaction, monthTxns, store } from '../store.js';
 import { monthSwitcher } from './dashboard.js';
+import { chipStyle, icon } from '../icons.js';
 
 export function render(el, go) {
   const filter = store.filterCategory;
@@ -78,6 +79,7 @@ export function render(el, go) {
         <ul class="txn-list full">
           ${day.txns.map((txn) => `
           <li>
+            <span class="cat-chip" style="${chipStyle(CATEGORY_MAP[txn.category]?.color ?? '#8c8c8c')}">${icon(txn.category)}</span>
             <span class="txn-note">${txn.note}</span>
             <span class="txn-cat">${CATEGORY_MAP[txn.category]?.label ?? ''}</span>
             <b class="txn-amount ${txn.kind}">${txn.kind === 'in' ? '+' : '−'}${money(txn.amount)}</b>
